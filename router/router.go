@@ -56,17 +56,14 @@ func New() *gin.Engine {
 		handler.GetCanvasAudioTask(c.Writer, c.Request, c.Param("id"))
 	})
 	v1.POST("/ai-logs", gin.WrapF(handler.ClientAICallLog))
-	v1.POST("/videos", gin.WrapF(handler.AIVideos))
+	v1.POST("/video/generations", gin.WrapF(handler.AIVideos))
 	v1.GET("/video-tasks", gin.WrapF(handler.UserVideoTasks))
 	v1.DELETE("/video-tasks/:id", func(c *gin.Context) {
 		handler.DeleteUserVideoTask(c.Writer, c.Request, c.Param("id"))
 	})
 	v1.POST("/media/references", gin.WrapF(handler.UploadReferenceMedia))
-	v1.GET("/videos/:id", func(c *gin.Context) {
+	v1.GET("/video/generations/:id", func(c *gin.Context) {
 		handler.AIVideo(c.Writer, c.Request, c.Param("id"))
-	})
-	v1.GET("/videos/:id/content", func(c *gin.Context) {
-		handler.AIVideoContent(c.Writer, c.Request, c.Param("id"))
 	})
 	v1.GET("/workflows", gin.WrapF(handler.UserWorkflows))
 	v1.POST("/workflows", gin.WrapF(handler.SaveUserWorkflow))

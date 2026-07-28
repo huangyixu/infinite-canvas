@@ -70,11 +70,7 @@ func AIVideo(w http.ResponseWriter, r *http.Request, id string) {
 		OK(w, map[string]any{"id": id, "task_id": id, "object": "video", "status": "queued", "progress": 0})
 		return
 	}
-	proxyAIGetRequest(w, r, "/videos/"+id)
-}
-
-func AIVideoContent(w http.ResponseWriter, r *http.Request, id string) {
-	proxyAIGetRequest(w, r, "/videos/"+id+"/content")
+	proxyAIGetRequest(w, r, "/video/generations/"+id)
 }
 
 func AIAudioSpeech(w http.ResponseWriter, r *http.Request) {
@@ -488,10 +484,10 @@ func resolveAIProxyURL(channel model.ModelChannel, modelName string, path string
 }
 
 func agnesVideoQueryID(modelName string, path string) (string, bool) {
-	if !isAgnesVideoModel(modelName) || !strings.HasPrefix(path, "/videos/") || strings.HasSuffix(path, "/content") {
+	if !isAgnesVideoModel(modelName) || !strings.HasPrefix(path, "/video/generations/") {
 		return "", false
 	}
-	id := strings.TrimPrefix(path, "/videos/")
+	id := strings.TrimPrefix(path, "/video/generations/")
 	if strings.HasPrefix(id, "video_") {
 		return id, true
 	}
@@ -500,11 +496,11 @@ func agnesVideoQueryID(modelName string, path string) (string, bool) {
 
 func resolveAIProxyPath(channel model.ModelChannel, modelName string, path string) string {
 	if isKIEChannel(channel, modelName) {
-		if path == "/videos" || path == "/images/generations" || path == "/images/edits" {
+		if path == "/video/generations" || path == "/images/generations" || path == "/images/edits" {
 			return "/jobs/createTask"
 		}
-		if strings.HasPrefix(path, "/videos/") && !strings.HasSuffix(path, "/content") {
-			taskID := strings.TrimSpace(strings.TrimPrefix(path, "/videos/"))
+		if strings.HasPrefix(path, "/video/generations/") {
+			taskID := strings.TrimSpace(strings.TrimPrefix(path, "/video/generations/"))
 			if taskID != "" && !strings.Contains(taskID, "/") {
 				return "/jobs/recordInfo?taskId=" + url.QueryEscape(taskID)
 			}
@@ -512,7 +508,7 @@ func resolveAIProxyPath(channel model.ModelChannel, modelName string, path strin
 		return path
 	}
 	if isAPIMartChannel(channel, modelName) {
-		if path == "/videos" {
+		if path == "/video/generations" {
 			return "/videos/generations"
 		}
 		if path == "/images/edits" {
@@ -522,8 +518,8 @@ func resolveAIProxyPath(channel model.ModelChannel, modelName string, path strin
 			}
 			return "/images/generations"
 		}
-		if strings.HasPrefix(path, "/videos/") && !strings.HasSuffix(path, "/content") {
-			taskID := strings.TrimSpace(strings.TrimPrefix(path, "/videos/"))
+		if strings.HasPrefix(path, "/video/generations/") {
+			taskID := strings.TrimSpace(strings.TrimPrefix(path, "/video/generations/"))
 			if taskID != "" && !strings.Contains(taskID, "/") {
 				return "/tasks/" + url.PathEscape(taskID) + "?language=zh"
 			}
@@ -531,20 +527,24 @@ func resolveAIProxyPath(channel model.ModelChannel, modelName string, path strin
 		return path
 	}
 	if isArkSeedanceVideo(channel.BaseURL, modelName) {
-		if path == "/videos" {
+		if path == "/video/generations" {
 			return "/contents/generations/tasks"
 		}
-		if strings.HasPrefix(path, "/videos/") && !strings.HasSuffix(path, "/content") {
-			return "/contents/generations/tasks/" + strings.TrimPrefix(path, "/videos/")
+		if strings.HasPrefix(path, "/video/generations/") {
+			return "/contents/generations/tasks/" + strings.TrimPrefix(path, "/video/generations/")
 		}
+	}
+	if isAgnesVideoModel(modelName) && path == "/video/generations" {
+		return "/videos"
 	}
 	return path
 }
 
 func isArkSeedanceVideo(baseURL string, modelName string) bool {
 	base := strings.ToLower(baseURL)
-	model := strings.ToLower(modelName)
-	return strings.Contains(model, "seedance") || strings.Contains(model, "doubao-seedance") || strings.Contains(base, "/api/plan/v3")
+	modelName = strings.ToLower(modelName)
+	return (strings.Contains(modelName, "seedance") || strings.Contains(modelName, "doubao-seedance")) &&
+		(strings.Contains(base, "ark.") || strings.Contains(base, "volces.com") || strings.Contains(base, "/api/plan/v3"))
 }
 
 func isAgnesVideoModel(modelName string) bool {

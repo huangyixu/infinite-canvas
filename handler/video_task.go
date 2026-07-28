@@ -82,7 +82,7 @@ func proxyAIVideoTaskRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		credits *= readAIRequestCount(body, contentType)
 	}
-	upstreamPath := resolveAIProxyPath(channel, modelName, "/videos")
+	upstreamPath := resolveAIProxyPath(channel, modelName, "/video/generations")
 	body, contentType, err = normalizeVideoCreateBody(body, contentType, modelName, channel, upstreamPath)
 	if err != nil {
 		log.Printf("AI video normalize request failed: model=%s err=%v", modelName, err)
@@ -101,7 +101,7 @@ func proxyAIVideoTaskRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	logContext := aiLogContext{
 		StartedAt:       startedAt,
-		Endpoint:        "/videos",
+		Endpoint:        "/video/generations",
 		Method:          http.MethodPost,
 		Model:           modelName,
 		Channel:         channel,
@@ -240,7 +240,7 @@ func pollVideoTaskFromUpstream(task model.VideoTask) (service.VideoTaskPollUpdat
 	if strings.TrimSpace(pollID) == "" {
 		return service.VideoTaskPollUpdate{}, errors.New("视频任务缺少上游任务 ID")
 	}
-	endpoint := "/videos/" + pollID
+	endpoint := "/video/generations/" + pollID
 	upstreamPath := resolveAIProxyPath(channel, task.Model, endpoint)
 	request, err := http.NewRequest(http.MethodGet, resolveAIProxyURL(channel, task.Model, upstreamPath), nil)
 	if err != nil {

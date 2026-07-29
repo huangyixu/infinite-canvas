@@ -17,4 +17,6 @@ description: 当前版本已实现但仍需人工验证的变更项
 - 默认视频请求已改为 console 使用的 JSON 结构，通用参数位于顶层，比例、分辨率、声音、水印和参考素材位于 `metadata` / `metadata.content`。
 - Seedance 模型不再仅凭模型名被误判为火山 Ark 直连；只有渠道地址明确属于 Ark/火山时才转换为 `/contents/generations/tasks`。
 - KIE、APIMart、Ark 和 Agnes 继续通过渠道适配映射到各自原生路径。
+- 已将上游 `NOT_START` / `NOT_STARTED` 状态归一化为排队中，并让后台继续轮询已保存为这些状态的任务，避免首次查询后永久停在 0%。
+- 已支持从 console 视频任务响应的 `data.result_url` 和嵌套 `content.video_url` 读取最终视频地址，避免任务完成后被客户端误判为无结果。
 - 待人工确认：console 渠道下 Seedance 文生视频、首帧/尾帧及多模态参考任务可以创建并持续轮询，不再返回 404 或 415。

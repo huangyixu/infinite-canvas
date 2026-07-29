@@ -2,6 +2,8 @@ package repository
 
 import "github.com/tigerowo/infinite-canvas/model"
 
+var activeVideoTaskStatuses = []string{"queued", "not_start", "not_started", "in_progress", "processing", "running"}
+
 func SaveVideoTask(task model.VideoTask) (model.VideoTask, error) {
 	db, err := DB()
 	if err != nil {
@@ -54,7 +56,7 @@ func ListUserVideoTasks(userID string, source string, limit int) ([]model.VideoT
 		}
 	}
 	err = query.
-		Where("status IN ?", []string{"queued", "in_progress", "processing", "running"}).
+		Where("status IN ?", activeVideoTaskStatuses).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&tasks).Error
@@ -78,7 +80,7 @@ func ListDueVideoTasks(limit int) ([]model.VideoTask, error) {
 		limit = 100
 	}
 	var tasks []model.VideoTask
-	err = db.Where("status IN ?", []string{"queued", "in_progress", "processing", "running"}).
+	err = db.Where("status IN ?", activeVideoTaskStatuses).
 		Order("created_at ASC").
 		Limit(limit).
 		Find(&tasks).Error
